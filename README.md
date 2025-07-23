@@ -35,24 +35,6 @@ Aplikasi web sederhana untuk mencatat, berbagi catatan ke pengguna lain atau pub
 
 ---
 
-## 📦 Struktur Folder Penting
-
-```
-app/
-├── Models/Note.php
-├── Models/Comment.php
-├── Policies/NotePolicy.php
-├── Http/Controllers/AuthController.php
-├── Http/Controllers/NoteController.php
-├── Http/Controllers/CommentController.php
-resources/
-└── js/
-    └── Pages/
-        ├── Auth/Login.vue
-        ├── Notes/Create.vue
-        ├── Notes/Manage.vue
-        └── Notes/NoteDetail.vue
-```
 ## ⚙️ Cara Menjalankan Proyek
 
 ### ✅ 1. Manual via CLI (tanpa Docker)
