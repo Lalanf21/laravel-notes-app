@@ -53,9 +53,6 @@ resources/
         ├── Notes/Manage.vue
         └── Notes/NoteDetail.vue
 ```
-
----
-
 ## ⚙️ Cara Menjalankan Proyek
 
 ### ✅ 1. Manual via CLI (tanpa Docker)
