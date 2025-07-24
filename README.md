@@ -11,7 +11,6 @@ Aplikasi web sederhana untuk mencatat, berbagi catatan ke pengguna lain atau pub
 - 🗒 Membuat catatan pribadi
 - 🔗 Share catatan ke user tertentu atau ke publik
 - 💬 Komentar pada catatan
-- 🌙 Dark mode toggle
 
 ---
 
@@ -30,8 +29,73 @@ Aplikasi web sederhana untuk mencatat, berbagi catatan ke pengguna lain atau pub
    - Pengguna lain (yang mendapatkan akses) dapat berkomentar.
    - Semua komentar ditampilkan di halaman detail catatan.
 
-4. **Dark Mode:**
-   - Tersedia toggle mode gelap/terang yang disimpan di `localStorage`.
+---
+
+## ⚙️ Plugin / Library yang di gunakan
+| Plugin / Library            | Fungsi Utama                      |
+| --------------------------- | --------------------------------- |
+| `@inertiajs/inertia`        | SPA bridge Laravel ⇄ Vue          |
+| `@inertiajs/vue3`           | Inertia adaptor untuk Vue 3       |
+| `ziggy-js`                  | Gunakan Laravel route di frontend |
+| `tailwindcss`               | Utility CSS styling               |
+| `vue` (v3)                  | Reactive frontend framework       |
+| `laravel/breeze` (opsional) | Auth dan Inertia starter kit      |
+| Vue Transition              | Animasi show/hide elemen          |
+
+---
+
+## 🗂️ Database Design
+### ✅ 1. Table users (Menyimpan data pengguna aplikasi.)
+| Kolom       | Tipe Data | Keterangan      |
+| ----------- | --------- | --------------- |
+| id          | UUID (PK) | Primary key     |
+| name        | String    | Nama user       |
+| email       | String    | Email unik      |
+| password    | String    | Password hashed |
+| created\_at | Timestamp | Waktu dibuat    |
+| updated\_at | Timestamp | Waktu diubah    |
+
+### ✅ 2. Table notes (Menyimpan catatan yang dibuat oleh user.)
+| Kolom       | Tipe Data | Keterangan                          |
+| ----------- | --------- | ----------------------------------- |
+| id          | UUID (PK) | Primary key                         |
+| title       | String    | Judul catatan                       |
+| content     | Text      | Isi catatan                         |
+| is\_public  | Boolean   | Status publik / pribadi             |
+| user\_id    | UUID (FK) | Pemilik catatan (relasi ke `users`) |
+| created\_at | Timestamp |                                     |
+| updated\_at | Timestamp |                                     |
+
+### ✅ 3. Table note_user_shares (Menyimpan data catatan yang dibagikan ke user lain.)
+| Kolom       | Tipe Data | Keterangan                           |
+| ----------- | --------- | ------------------------------------ |
+| id          | UUID (PK) | Primary key                          |
+| note\_id    | UUID (FK) | Catatan yang dibagikan               |
+| user\_id    | UUID (FK) | Penerima catatan (relasi ke `users`) |
+| created\_at | Timestamp |                                      |
+| updated\_at | Timestamp |                                      |
+
+### ✅ 4. Table comments (Menyimpan komentar user pada catatan.)
+| Kolom       | Tipe Data | Keterangan               |
+| ----------- | --------- | ------------------------ |
+| id          | UUID (PK) | Primary key              |
+| content     | Text      | Isi komentar             |
+| note\_id    | UUID (FK) | Catatan yang dikomentari |
+| user\_id    | UUID (FK) | User yang mengomentari   |
+| created\_at | Timestamp |                          |
+| updated\_at | Timestamp |                          |
+
+
+##🔑 Relasi Antartabel
+users ⇄ notes: One to Many
+
+users ⇄ comments: One to Many
+
+notes ⇄ comments: One to Many
+
+notes ⇄ note_user_shares: One to Many
+
+users ⇄ note_user_shares: One to Many
 
 ---
 

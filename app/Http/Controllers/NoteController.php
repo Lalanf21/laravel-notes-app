@@ -7,97 +7,97 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
+use Inertia\Inertia;
 
 class NoteController extends Controller
 {
     public function index()
     {
-        $notes = Note::with('comments', 'sharedUsers')->where('user_id', Auth::id())->get();
-        return response()->json($notes);
+        $pulicNote = Note::with('sharedWith')->orderBy('title', 'asc')->where('is_public', true)->get();
+        $notes = Note::with('sharedWith')->orderBy('title', 'asc')->where('user_id', Auth::id())->get();
+        $users = User::get();
+        return Inertia::render('Notes/ManageNote', compact('notes', 'users', 'pulicNote'));
     }
 
     public function store(Request $request)
     {
-        $note = Note::create([
+        Note::create([
             'id' => Str::uuid(),
             'user_id' => Auth::id(),
             'title' => $request->title,
             'content' => $request->content,
             'is_public' => $request->is_public ?? false,
         ]);
-        return response()->json($note);
+        return redirect()->route('notes.index')->with('success', 'Note created successfully');
     }
 
     public function show(Note $note)
     {
-        $this->authorize('view', $note);
-        // Izinkan akses jika: pemilik, note public, atau termasuk user yang dibagikan
-        if (
-            $note->user_id === Auth::id() ||
-            $note->is_public ||
-            $note->sharedUsers()->where('user_id', Auth::id())->exists()
-        ) {
-            return response()->json($note->load('comments', 'sharedUsers'));
+        if (!Gate::allows('view', $note)) {
+            abort(403, 'Tidak ada akses.');
         }
 
-        return response()->json(['error' => 'Unauthorized'], 403);
+        $note->load('comments.user', 'sharedWith');
+
+        return Inertia::render('Notes/NoteDetail', compact('note'));
+    }
+
+    public function edit(Note $note)
+    {
+        return Inertia::render('Notes/EditNote', compact('note'));
     }
 
     public function update(Request $request, Note $note)
     {
-         $this->authorize('update', $note);
-        if ($note->user_id !== Auth::id()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+        $this->authorize('update', $note);
 
         $note->update($request->only('title', 'content', 'is_public'));
-        return response()->json($note);
+        return back()->with('success', 'Note update successfully!');;
+    }
+
+    public function togglePublic(Note $note)
+    {
+        $this->authorize('update', $note);
+        $note->is_public = !$note->is_public;
+        $note->save();
+        return redirect()->route('notes.index')->with('success', 'Successfully set as public');
     }
 
     public function destroy(Note $note)
     {
-         $this->authorize('delete', $note);
+        $this->authorize('delete', $note);
         if ($note->user_id !== Auth::id()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
         $note->delete();
-        return response()->json(['message' => 'Deleted']);
+        return redirect()->route('notes.index')->with('success', 'Note deleted successfully');
     }
 
     public function share(Note $note, Request $request)
     {
-        if ($note->user_id !== Auth::id()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+       $this->authorize('update', $note);
 
-        $user = User::where('email', $request->email)->first();
-        if (!$user) return response()->json(['error' => 'User not found'], 404);
+        $validated = $request->validate([
+            'user_ids' => 'array',
+            'user_ids.*' => 'exists:users,id'
+        ]);
 
-        $note->sharedUsers()->syncWithoutDetaching([$user->id]);
-        return response()->json(['message' => 'Note shared']);
+        $note->sharedWith()->sync($validated['user_ids']);
+
+        return back()->with('success', 'Note shared successfully!');
     }
 
     public function comment(Note $note, Request $request)
     {
-        if (
-            $note->user_id !== Auth::id() &&
-            !$note->is_public &&
-            !$note->sharedUsers()->where('user_id', Auth::id())->exists()
-        ) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+        $this->authorize('update', $note);
 
-        $comment = $note->comments()->create([
+        $note->comments()->create([
             'user_id' => Auth::id(),
             'content' => $request->content,
         ]);
 
-        return response()->json($comment);
-    }
-
-    public function publicNotes()
-    {
-        return response()->json(Note::where('is_public', true)->with('user')->get());
+        return back()->with('success', 'Commented !');;
     }
 }

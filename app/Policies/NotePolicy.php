@@ -7,12 +7,15 @@ use App\Models\Note;
 
 class NotePolicy
 {
-    public function view(User $user, Note $note): bool
+    public function view(?User $user, Note $note): bool
     {
-        return $note->user_id === $user->id ||
-               $note->is_public ||
-               $note->sharedUsers()->where('user_id', $user->id)->exists();
+        return $note->is_public ||
+            ($user && (
+                $note->user_id === $user->id ||
+                $note->sharedWith()->where('user_id', $user->id)->exists()
+            ));
     }
+
 
     public function update(User $user, Note $note): bool
     {

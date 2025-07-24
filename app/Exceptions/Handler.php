@@ -2,9 +2,10 @@
 
 namespace App\Exceptions;
 
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
-
+use Symfony\Component\HttpFoundation\Response;
 class Handler extends ExceptionHandler
 {
     /**
@@ -46,5 +47,16 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             //
         });
+    }
+
+    public function render($request, Throwable $exception): Response
+    {
+        if ($exception instanceof AuthorizationException) {
+            return redirect()
+                ->route('notes.index')
+                ->with('error', 'Anda tidak memiliki akses untuk melakukan aksi ini.');
+        }
+
+        return parent::render($request, $exception);
     }
 }
