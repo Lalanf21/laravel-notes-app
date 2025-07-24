@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,6 +15,16 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
+Route::middleware('guest')->group(function () {
+    Route::get('/', fn () => Inertia::render('Auth/Login'))->name('login');
+    Route::post('/login', [AuthController::class, 'login']);
 });
+
+Route::middleware('auth')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/dashboard', function () {
+        return Inertia::render('Dashboard');
+    });
+});
+
+require __DIR__.'/auth.php';
